@@ -36,16 +36,16 @@ IS_OTHER = 3
 
 #####################  hyper parameters  ####################
 
-MAX_EPISODES = 500000  # 5000
+MAX_EPISODES = 500000
 MAX_EP_STEPS = 1000
 TOTAL_STEPS = 1e+6
-LR_A = 0.0001    # learning rate for actor
+LR_A = 0.0001   # learning rate for actor
 LR_C = 0.001    # learning rate for critic
 GAMMA = 0.99    # reward discount
-TAU = 0.001  # 0.01      # soft replacement
-MEMORY_CAPACITY = 10000  # 10000
-c = 0.1  # 0.1
-BATCH_SIZE = 16  # 32
+TAU = 0.001     # soft replacement
+MEMORY_CAPACITY = 10000
+c = 0.1
+BATCH_SIZE = 16
 RENDER = False
 start_training = 1000
 random_seed = 4
