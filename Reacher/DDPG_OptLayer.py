@@ -458,7 +458,6 @@ if __name__ == "__main__":
 
             # Perform action
             next_state, reward, done, _ = env.step(action)
-            # done_bool = float(done) if episode_timesteps < env._max_episode_steps else 0
             done_bool = float(
                 done) if episode_timesteps < env._max_episode_steps else 0
 
