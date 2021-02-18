@@ -9,6 +9,7 @@ This code requires the following:
 - python 3.\*
 - TensorFlow v2.0+
 - pytorch+cuda
+- [mujoco-py](https://github.com/openai/mujoco-py)
 - [Gurobi](https://www.gurobi.com/)
 - [CVXPY](https://www.cvxpy.org/)
 - [CvxpyLayer](https://locuslab.github.io/2019-10-28-cvxpylayers/)
