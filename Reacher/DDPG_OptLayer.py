@@ -3,7 +3,6 @@
 """
 Created on Wed Feb 10 23:31 2021
 
-@author: Yang-Shang-Hsuan
 @The DDPG code was adapt from: https://github.com/sfujim/TD3/blob/master/DDPG.py
 """
 # -*- coding: utf-8 -*-

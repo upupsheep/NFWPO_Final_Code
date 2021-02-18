@@ -3,7 +3,6 @@
 """
 Created on Sun Dec 27 17:05:27 2020
 
-@author: Lin-Jyun-Li
 @The DDPG code was adapt from: https://github.com/MorvanZhou/Reinforcement-learning-with-tensorflow
 """
 # -*- coding: utf-8 -*-
@@ -21,16 +20,16 @@ import matplotlib.pyplot as plt
 import random
 tf.compat.v1.disable_eager_execution()
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-os.environ['CUDA_VISIBLE_DEVICES'] = '1' #make render not lag
+os.environ['CUDA_VISIBLE_DEVICES'] = '1'  # make render not lag
 os.environ['TF_DETERMINISTIC_OPS'] = '1'
 
-env_name='Reacher-v2'
-env=gym.make(env_name)
-s_dim = env.observation_space.shape[0] 
-a_dim = env.action_space.shape[0]               
-a_bound=env.action_space.high
-ewma_r=0
-arg_seed=0
+env_name = 'Reacher-v2'
+env = gym.make(env_name)
+s_dim = env.observation_space.shape[0]
+a_dim = env.action_space.shape[0]
+a_bound = env.action_space.high
+ewma_r = 0
+arg_seed = 0
 #########################seed##############################
 tf.compat.v1.reset_default_graph()
 random.seed(arg_seed)
@@ -38,48 +37,53 @@ np.random.seed(arg_seed)
 env.seed(arg_seed)
 env.action_space.np_random.seed(arg_seed)
 #####################  hyper parameters  ####################
-LR_C=0.001
-LR_A=0.0001
-GAMMA=0.99
-TAU=0.001
+LR_C = 0.001
+LR_A = 0.0001
+GAMMA = 0.99
+TAU = 0.001
 
-MEMORY_CAPACITY=10000
-BATCH_SIZE=64
+MEMORY_CAPACITY = 10000
+BATCH_SIZE = 64
 eval_freq = 5000
-store_testing_before_action=[]
-store_testing_after_action=[]
+store_testing_before_action = []
+store_testing_after_action = []
 
 ####################testing part#################################
-def evaluation(env_name,seed,ddpg,eval_episode=10):
-    avgreward=0
-    avg=[]
-    eval_env=gym.make(env_name)
+
+
+def evaluation(env_name, seed, ddpg, eval_episode=10):
+    avgreward = 0
+    avg = []
+    eval_env = gym.make(env_name)
     eval_env.seed(seed+100)
     for eptest in range(eval_episode):
-        running_reward =0
-        done=False
-        s=eval_env.reset()
-        while not done:     
-            action= ddpg.choose_action(s)
+        running_reward = 0
+        done = False
+        s = eval_env.reset()
+        while not done:
+            action = ddpg.choose_action(s)
             store_testing_before_action.append(action)
-            action,loss=Projection(action)
+            action, loss = Projection(action)
             store_testing_after_action.append(action)
-            s_,r,done,info=eval_env.step(action)
-            s=s_
-            running_reward=running_reward+r
+            s_, r, done, info = eval_env.step(action)
+            s = s_
+            running_reward = running_reward+r
         print('Episode {}\tReward: {} \t AvgReward'.format(eptest, running_reward))
-        avgreward=avgreward+running_reward
+        avgreward = avgreward+running_reward
         avg.append(running_reward)
-    avgreward=avgreward/eval_episode
+    avgreward = avgreward/eval_episode
     print("------------------------------------------------")
-    print("Evaluation average reward :",avgreward)
+    print("Evaluation average reward :", avgreward)
     print("------------------------------------------------")
 
     return avgreward
 ###############################  DDPG  ####################################
+
+
 class DDPG(object):
     def __init__(self, a_dim, s_dim, a_bound,):
-        self.memory = np.zeros((MEMORY_CAPACITY, s_dim * 2 + a_dim + 1+1), dtype=np.float32)
+        self.memory = np.zeros(
+            (MEMORY_CAPACITY, s_dim * 2 + a_dim + 1+1), dtype=np.float32)
         self.pointer = 0
         configuration = tf.compat.v1.ConfigProto()
         configuration.gpu_options.allow_growth = True
@@ -90,164 +94,188 @@ class DDPG(object):
         self.S = tf.compat.v1.placeholder(tf.float32, [None, s_dim], 's')
         self.S_ = tf.compat.v1.placeholder(tf.float32, [None, s_dim], 's_')
         self.R = tf.compat.v1.placeholder(tf.float32, [None, 1], 'r')
-        self.Done=tf.compat.v1.placeholder(tf.float32, [None, 1], 'done')
+        self.Done = tf.compat.v1.placeholder(tf.float32, [None, 1], 'done')
 
         with tf.compat.v1.variable_scope('Actor'):
             self.a = self._build_a(self.S, scope='eval', trainable=True)
             a_ = self._build_a(self.S_, scope='target', trainable=False)
         with tf.compat.v1.variable_scope('Critic'):
-            self.q = self._build_c(self.S, self.a, scope='eval', trainable=True)
+            self.q = self._build_c(
+                self.S, self.a, scope='eval', trainable=True)
             q_ = self._build_c(self.S_, a_, scope='target', trainable=False)
 
         # networks parameters
-        self.ae_params = tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.GLOBAL_VARIABLES, scope='Actor/eval')
-        self.at_params = tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.GLOBAL_VARIABLES, scope='Actor/target')
-        self.ce_params = tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.GLOBAL_VARIABLES, scope='Critic/eval')
-        self.ct_params = tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.GLOBAL_VARIABLES, scope='Critic/target')
+        self.ae_params = tf.compat.v1.get_collection(
+            tf.compat.v1.GraphKeys.GLOBAL_VARIABLES, scope='Actor/eval')
+        self.at_params = tf.compat.v1.get_collection(
+            tf.compat.v1.GraphKeys.GLOBAL_VARIABLES, scope='Actor/target')
+        self.ce_params = tf.compat.v1.get_collection(
+            tf.compat.v1.GraphKeys.GLOBAL_VARIABLES, scope='Critic/eval')
+        self.ct_params = tf.compat.v1.get_collection(
+            tf.compat.v1.GraphKeys.GLOBAL_VARIABLES, scope='Critic/target')
 
         # target net replacement
         self.soft_replace = [tf.compat.v1.assign(t, (1 - TAU) * t + TAU * e)
                              for t, e in zip(self.at_params + self.ct_params, self.ae_params + self.ce_params)]
 
         q_target = self.R + (1-self.Done)*GAMMA * q_
-        td_error = tf.compat.v1.losses.mean_squared_error(labels=q_target, predictions=self.q)
-        self.ctrain = tf.compat.v1.train.AdamOptimizer(LR_C).minimize(td_error, var_list=self.ce_params)
-        
-       
+        td_error = tf.compat.v1.losses.mean_squared_error(
+            labels=q_target, predictions=self.q)
+        self.ctrain = tf.compat.v1.train.AdamOptimizer(
+            LR_C).minimize(td_error, var_list=self.ce_params)
+
         a_loss = - tf.reduce_mean(input_tensor=self.q)    # maximize the q
-        
-             
-        self.atrain = tf.compat.v1.train.AdamOptimizer(LR_A).minimize(a_loss, var_list=self.ae_params)
+
+        self.atrain = tf.compat.v1.train.AdamOptimizer(
+            LR_A).minimize(a_loss, var_list=self.ae_params)
 
         self.sess.run(tf.compat.v1.global_variables_initializer())
 
     def choose_action(self, s):
-       
+
         return self.sess.run(self.a, {self.S: s[np.newaxis, :]})[0]
 
     def learn(self):
         # soft target replacement
         self.sess.run(self.soft_replace)
-        buffer_size= min(ddpg.pointer+1,MEMORY_CAPACITY)
+        buffer_size = min(ddpg.pointer+1, MEMORY_CAPACITY)
         indices = np.random.choice(buffer_size, size=BATCH_SIZE)
         bt = self.memory[indices, :]
         bs = bt[:, :self.s_dim]
         ba = bt[:, self.s_dim: self.s_dim + self.a_dim]
-        br=  bt[:,self.s_dim+self.a_dim:self.s_dim+self.a_dim+1]
-        bs_ = bt[:,self.s_dim+self.a_dim+1:self.s_dim+self.a_dim+1+self.s_dim]
-        bd = bt[:,-1:]
+        br = bt[:, self.s_dim+self.a_dim:self.s_dim+self.a_dim+1]
+        bs_ = bt[:, self.s_dim+self.a_dim+1:self.s_dim+self.a_dim+1+self.s_dim]
+        bd = bt[:, -1:]
         self.sess.run(self.atrain, {self.S: bs})
-        self.sess.run(self.ctrain, {self.S: bs, self.a: ba, self.R: br, self.S_: bs_,self.Done:bd})
+        self.sess.run(
+            self.ctrain, {self.S: bs, self.a: ba, self.R: br, self.S_: bs_, self.Done: bd})
 
-    def store_transition(self, s, a, r, s_,done):
-        transition = np.hstack((s, a, [r], s_,done))
-        index = self.pointer % MEMORY_CAPACITY  # replace the old memory with new memory
+    def store_transition(self, s, a, r, s_, done):
+        transition = np.hstack((s, a, [r], s_, done))
+        # replace the old memory with new memory
+        index = self.pointer % MEMORY_CAPACITY
         self.memory[index, :] = transition
         self.pointer += 1
 
     def _build_a(self, s, scope, trainable):
         with tf.compat.v1.variable_scope(scope):
-            net = tf.compat.v1.layers.dense(s, 400, activation=tf.nn.relu, name='l1', trainable=trainable)
-            net2 = tf.compat.v1.layers.dense(net,300, activation=tf.nn.relu, name='l2', trainable=trainable)
-            a = tf.compat.v1.layers.dense(net2, self.a_dim, activation=tf.nn.tanh, name='a', trainable=trainable)
+            net = tf.compat.v1.layers.dense(
+                s, 400, activation=tf.nn.relu, name='l1', trainable=trainable)
+            net2 = tf.compat.v1.layers.dense(
+                net, 300, activation=tf.nn.relu, name='l2', trainable=trainable)
+            a = tf.compat.v1.layers.dense(
+                net2, self.a_dim, activation=tf.nn.tanh, name='a', trainable=trainable)
             return tf.multiply(a, self.a_bound, name='scaled_a')
- 
+
     def _build_c(self, s, a, scope, trainable):
         with tf.compat.v1.variable_scope(scope):
-            net = tf.compat.v1.layers.dense(s, 400, activation=tf.nn.relu, name='cl1', trainable=trainable)
-            w2_net = tf.compat.v1.get_variable('w2_net', [400, 300], trainable=trainable)
-            w2_a = tf.compat.v1.get_variable('w2_a', [self.a_dim, 300], trainable=trainable)
-            b2= tf.compat.v1.get_variable('b1', [1, 300], trainable=trainable)
-            net2= tf.nn.relu(tf.matmul(a,w2_a)+tf.matmul(net,w2_net)+b2)
-            return tf.compat.v1.layers.dense(net2, 1, trainable=trainable)  # Q(s,a)
+            net = tf.compat.v1.layers.dense(
+                s, 400, activation=tf.nn.relu, name='cl1', trainable=trainable)
+            w2_net = tf.compat.v1.get_variable(
+                'w2_net', [400, 300], trainable=trainable)
+            w2_a = tf.compat.v1.get_variable(
+                'w2_a', [self.a_dim, 300], trainable=trainable)
+            b2 = tf.compat.v1.get_variable('b1', [1, 300], trainable=trainable)
+            net2 = tf.nn.relu(tf.matmul(a, w2_a)+tf.matmul(net, w2_net)+b2)
+            # Q(s,a)
+            return tf.compat.v1.layers.dense(net2, 1, trainable=trainable)
 #############################  Projection  ####################################
+
+
 def Projection(action):
     with gp.Env(empty=True) as env:
         env.setParam('OutputFlag', 0)
         env.start()
         with gp.Model(env=env) as reacher_m:
-            neta1=action[0]
-            neta2=action[1]
-           
-            a1 = reacher_m.addVar(lb=-1,ub=1, name="a1",vtype=GRB.CONTINUOUS)
-            a2 = reacher_m.addVar(lb=-1,ub=1, name="a2",vtype=GRB.CONTINUOUS)
-            obj= (a1-neta1)**2+ (a2-neta2)**2
-            reacher_m.setObjective(obj,GRB.MINIMIZE)
-            
-        
-            reacher_m.addConstr(a1+a2<=0.1)   
-            reacher_m.addConstr(-0.1<=a1+a2)
-            reacher_m.addConstr((a1**2+a2**2)<=0.02)
+            neta1 = action[0]
+            neta2 = action[1]
+
+            a1 = reacher_m.addVar(lb=-1, ub=1, name="a1", vtype=GRB.CONTINUOUS)
+            a2 = reacher_m.addVar(lb=-1, ub=1, name="a2", vtype=GRB.CONTINUOUS)
+            obj = (a1-neta1)**2 + (a2-neta2)**2
+            reacher_m.setObjective(obj, GRB.MINIMIZE)
+
+            reacher_m.addConstr(a1+a2 <= 0.1)
+            reacher_m.addConstr(-0.1 <= a1+a2)
+            reacher_m.addConstr((a1**2+a2**2) <= 0.02)
 
             reacher_m.optimize()
-        
-            return (a1.X,a2.X ),reacher_m.objVal
-##################################################################################
-ddpg = DDPG(a_dim,s_dim,a_bound)       
-ewma=[]
-eva_reward=[]
-store_before_action=[]
-store_after_action=[]
-store_before_action_and_gaussain=[]
-reward=[]
-nploss=[]
-i=0
-Net_action=np.zeros((100000,a_dim+2))   
-max_action = float(env.action_space.high[0])
-step=0
-for ep in range(100000000):
-    #env.render()
-    step=0
-    R=0
-    done=False
-    s=env.reset()
-    
-    while not done:
-        step=step+1
-        if ddpg.pointer<1000:
-            action=env.action_space.sample()
-        else :
-            action=ddpg.choose_action(s)
-            store_before_action_and_gaussain.append(action)
-            action=(action+np.random.normal(0,0.1,a_dim)).clip(-max_action,max_action)
-            i=i+1
-        store_before_action.append(action)
-        action,loss=Projection(action)
-        store_after_action.append(action)
-        assert abs(sum(action))<=0.1+1e-6
-        assert -1<=action[0]<=1
-        assert -1<=action[1]<=1
-        assert abs((action[0]**2+action[1]**2))<=0.02+1e-6
-        
-        s_,r,done,info=env.step(action)
-        
-        done_bool = False if step == env._max_episode_steps else done 
 
-        ddpg.store_transition(s,action,r,s_,done_bool)
-        if ddpg.pointer>=1000:
+            return (a1.X, a2.X), reacher_m.objVal
+
+
+##################################################################################
+ddpg = DDPG(a_dim, s_dim, a_bound)
+ewma = []
+eva_reward = []
+store_before_action = []
+store_after_action = []
+store_before_action_and_gaussain = []
+reward = []
+nploss = []
+i = 0
+Net_action = np.zeros((100000, a_dim+2))
+max_action = float(env.action_space.high[0])
+step = 0
+for ep in range(100000000):
+    # env.render()
+    step = 0
+    R = 0
+    done = False
+    s = env.reset()
+
+    while not done:
+        step = step+1
+        if ddpg.pointer < 1000:
+            action = env.action_space.sample()
+        else:
+            action = ddpg.choose_action(s)
+            store_before_action_and_gaussain.append(action)
+            action = (action+np.random.normal(0, 0.1, a_dim)
+                      ).clip(-max_action, max_action)
+            i = i+1
+        store_before_action.append(action)
+        action, loss = Projection(action)
+        store_after_action.append(action)
+        assert abs(sum(action)) <= 0.1+1e-6
+        assert -1 <= action[0] <= 1
+        assert -1 <= action[1] <= 1
+        assert abs((action[0]**2+action[1]**2)) <= 0.02+1e-6
+
+        s_, r, done, info = env.step(action)
+
+        done_bool = False if step == env._max_episode_steps else done
+
+        ddpg.store_transition(s, action, r, s_, done_bool)
+        if ddpg.pointer >= 1000:
             ddpg.learn()
-        if (ddpg.pointer+1)% eval_freq==0:
-            eva_reward.append(evaluation(env_name,arg_seed,ddpg))
-        s= s_
+        if (ddpg.pointer+1) % eval_freq == 0:
+            eva_reward.append(evaluation(env_name, arg_seed, ddpg))
+        s = s_
         R += r
-        
+
     ewma_r = 0.05 * R + (1 - 0.05) * ewma_r
     print({
         'episode': ep,
-        'reward' :R,
-        'ewma_reward' :ewma_r
+        'reward': R,
+        'ewma_reward': ewma_r
     })
-    
+
     reward.append(R)
     ewma.append(ewma_r)
-    if(ddpg.pointer>=500000):
+    if(ddpg.pointer >= 500000):
         print("done training")
         break
-  
-np.save("Reacher_{}_Projection_Reward".format(arg_seed),reward)
-np.save("Reacher_{}_Projection_before_Action".format(arg_seed),store_before_action)
-np.save("Reacher_{}_Projection_after_Action".format(arg_seed),store_after_action)
-np.save("Reacher_{}_Projection_eval_reward".format(arg_seed),eva_reward)
-np.save("Reacher_{}_Projection_before_Action_Gaussian".format(arg_seed),store_before_action_and_gaussain)
-np.save("Reacher_{}_Projection_eval_before_Action".format(arg_seed),store_testing_before_action)
-np.save("Reacher_{}_Projection_eval_After_Action".format(arg_seed),store_testing_after_action)
+
+np.save("Reacher_{}_Projection_Reward".format(arg_seed), reward)
+np.save("Reacher_{}_Projection_before_Action".format(
+    arg_seed), store_before_action)
+np.save("Reacher_{}_Projection_after_Action".format(
+    arg_seed), store_after_action)
+np.save("Reacher_{}_Projection_eval_reward".format(arg_seed), eva_reward)
+np.save("Reacher_{}_Projection_before_Action_Gaussian".format(
+    arg_seed), store_before_action_and_gaussain)
+np.save("Reacher_{}_Projection_eval_before_Action".format(
+    arg_seed), store_testing_before_action)
+np.save("Reacher_{}_Projection_eval_After_Action".format(
+    arg_seed), store_testing_after_action)
