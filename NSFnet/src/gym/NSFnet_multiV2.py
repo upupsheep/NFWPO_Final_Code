@@ -328,11 +328,14 @@ class Network():
             t[i][2] = self.senders[i].p2
             for j in range(3):
                 p[i][j] = (t[i][j] == 0) * 1e5 
+        ###speed up
+        """
         for i in range(3):
             for j in range(3):
                 if (t[i][j]) > 50:
                     drop_total[i] += (t[i][j] - 50)
                     t[i][j] = 50
+        """
         #print("t",t)
         while self.cur_time < end_time:
             #print(self.cur_time,end_time)
@@ -341,14 +344,9 @@ class Network():
             #input()
             #print(self.q)
             event_time, event, noise, sender, event_type, next_hop, cur_latency, dropped, acp_tmp, pack = heapq.heappop(self.q)
-            #print(event_type)
-            #input()
-            #for link in self.links:
-            #    print(link.link_id,":",link.queue_delay/link.max_queue_delay)
+
             pack.now_link[0]=next_hop
-            #print(pack.packet_ID,":",pack.content)
-            #print("Got event %s, to link %d, latency %f at time %f" % (event_type, next_hop, cur_latency, event_time))
-            #print(sender.get_aoi_reward())
+
             self.cur_time = event_time
             new_event_time = event_time
             new_event_type = event_type

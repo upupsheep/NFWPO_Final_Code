@@ -34,7 +34,7 @@ IS_SELECTING = 2
 IS_OTHER = 3
 #####################  hyper parameters  ####################
 
-MAX_EPISODES = 1000000
+MAX_EPISODES = 700000
 MAX_EP_STEPS = 1000
 TOTAL_STEPS = 1000000
 LR_A = 0.0001   # learning rate for actor
@@ -217,7 +217,7 @@ def OptLayer_function(action, state, random_sample=False):
                 half_m.addConstr(u3 == a3*w3)
                 half_m.addConstr(u4 == a4*w4)
                 half_m.addConstr(u5 == a5*w5)
-                half_m.addConstr(u6 == a5*w6)
+                half_m.addConstr(u6 == a6*w6)
                 half_m.addConstr(abs_u1 == (gp.abs_(u1)))
                 half_m.addConstr(abs_u2 == (gp.abs_(u2)))
                 half_m.addConstr(abs_u3 == (gp.abs_(u3)))
