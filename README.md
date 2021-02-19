@@ -25,7 +25,10 @@ Following are the examples for running the experiments in Ubuntu.
 ### BIKE SHARING SYSTEMS
 To run the experiments metioned in Secion 4.1, please follow the instructions below:
 #### A. Evaluating  FWPO  with  tabular  parameterization:
-1. Enter the directory `BSS-3`.
+1. Enter the directory `BSS-3`:
+```
+cd BSS-3
+```
 2. Set the random seed `arg_seed` between 0-4 in Line 25 of `NFWPO.py`.
 3. Use the following command to train NFWPO:
 ```
@@ -41,7 +44,10 @@ python3 DDPG_RewardShaping.py
 5. The result is shown in Figure 1.
 
 #### B. Evaluating  NFWPO:
-1. Enter the directory `BSS-5`.
+1. Enter the directory `BSS-5`:
+```
+cd BSS-5
+```
 2. Set the random seed `arg_seed` between 0-4 in `NFWPO.py`.
 3. Use the following command to train NFWPO:
 ```
@@ -60,7 +66,10 @@ python3 DDPG_OptLayer.py
 5. The result is shown in Figure 2.
 
 ###   UTILITY MAXIMIZATION OFCOMMUNICATION NETWORKS
-1. Enter the directory `NSFnet/src/gym`.
+1. Enter the directory `NSFnet/src/gym`:
+```
+cd NSFnet/src/gym
+```
 2. Set the random seed `arg_seed` between 0-4 in `NFWPO.py`.
 3. Use the following command to train NFWPO:
 ```
@@ -79,11 +88,20 @@ python3 DDPG_OptLayer.py
 5. The result is shown in Figure 3.
 
 ###    MUJOCO CONTINUOUS CONTROL TASKS
-To run the experiments metioned in Secion 4.3, please first enter the directory `Reacher` for **Reacher with linear and nonlinear constraints**, and enter `Halfcheetah-State` for **Halfcheetah  with  state-dependent  constraints**
+To run the experiments metioned in Secion 4.3, please first enter the directory `Reacher` for **Reacher with linear and nonlinear constraints**, and enter `Halfcheetah-State` for **Halfcheetah  with  state-dependent  constraints**.
+```
+cd Reacher
+```
+```
+cd Halfcheetah-State
+```
 Then the remaining steps are same as the previous experiment.
 The result is shown in Figure 4-5.
 
 ###  ADDITIONAL EXPERIMENT
 To run the experiments metioned in Appendix C.3, please first enter the directory `Halfcheetah-Quad`.
+```
+cd Halfcheetah-Quad
+```
 Then the remaining steps are same as the previous experiment.
 The result is shown in Figure 6.
