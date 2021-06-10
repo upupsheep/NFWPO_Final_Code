@@ -165,10 +165,10 @@ class DDPG(object):
 
     def _build_a(self, s, scope, trainable):
         with tf.compat.v1.variable_scope(scope):
-            net = tf.compat.v1.layers.dense(s, 400, activation=tf.nn.relu, name='l1', trainable=trainable)
-            net2 = tf.compat.v1.layers.dense(net,300, activation=tf.nn.relu, name='l2', trainable=trainable)
+            net = tf.compat.v1.layers.dense(s, 400, activation=tf.nn.leaky_relu, name='l1', trainable=trainable)
+            net2 = tf.compat.v1.layers.dense(net,300, activation=tf.nn.leaky_relu, name='l2', trainable=trainable)
             #a = tf.compat.v1.layers.dense(net2, self.a_dim, activation=self.new_relu10000, name='a', trainable=trainable)
-            a = tf.compat.v1.layers.dense(net2, self.a_dim, activation=tf.nn.relu, name='a', trainable=trainable)
+            a = tf.compat.v1.layers.dense(net2, self.a_dim, activation=tf.nn.tanh, name='a', trainable=trainable)
             #a = tf.multiply(tf.add(a,1), 50, name='scaled_a')
             #return  tf.multiply(a, self.a_bound, name='scaled_a')
             return a
