@@ -195,9 +195,9 @@ def Projection(action):
             obj = (a1-neta1)**2 + (a2-neta2)**2
             reacher_m.setObjective(obj, GRB.MINIMIZE)
 
-            reacher_m.addConstr(a1+a2 <= 0.1)
-            reacher_m.addConstr(-0.1 <= a1+a2)
-            reacher_m.addConstr((a1**2+a2**2) <= 0.02)
+            # reacher_m.addConstr(a1+a2 <= 0.1)
+            # reacher_m.addConstr(-0.1 <= a1+a2)
+            reacher_m.addConstr((a1**2+a2**2) <= 0.05)
 
             reacher_m.optimize()
 

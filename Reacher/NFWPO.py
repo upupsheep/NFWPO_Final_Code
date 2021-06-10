@@ -208,9 +208,9 @@ class DDPG(object):
                                      vtype=GRB.CONTINUOUS)
                     obj = a1*grad[i][0]+a2*grad[i][1]
                     fw_m.setObjective(obj, GRB.MAXIMIZE)
-                    fw_m.addConstr(a1+a2 <= 0.1)
-                    fw_m.addConstr(-0.1 <= a1+a2)
-                    fw_m.addConstr((a1**2+a2**2) <= 0.02)
+                    # fw_m.addConstr(a1+a2 <= 0.1)
+                    # fw_m.addConstr(-0.1 <= a1+a2)
+                    fw_m.addConstr((a1**2+a2**2) <= 0.05)
                     fw_m.optimize()
                     action_table[i][0] = a1.X
                     action_table[i][1] = a2.X
@@ -233,9 +233,9 @@ def Projection(action):
             obj = (a1-neta1)**2 + (a2-neta2)**2
             reacher_m.setObjective(obj, GRB.MINIMIZE)
 
-            reacher_m.addConstr(a1+a2 <= 0.1)
-            reacher_m.addConstr(-0.1 <= a1+a2)
-            reacher_m.addConstr((a1**2+a2**2) <= 0.02)
+            # reacher_m.addConstr(a1+a2 <= 0.1)
+            # reacher_m.addConstr(-0.1 <= a1+a2)
+            reacher_m.addConstr((a1**2+a2**2) <= 0.05)
 
             reacher_m.optimize()
 
@@ -276,10 +276,10 @@ for ep in range(10000000):
         action = Projection(action)
         store_after_action.append(action)
 
-        assert abs(sum(action)) <= 0.1+1e-6
-        assert -1 <= action[0] <= 1
-        assert -1 <= action[1] <= 1
-        assert abs((action[0]**2+action[1]**2)) <= 0.02+1e-6
+        # assert abs(sum(action)) <= 0.1+1e-6
+        # assert -1 <= action[0] <= 1
+        # assert -1 <= action[1] <= 1
+        assert abs((action[0]**2+action[1]**2)) <= 0.05+1e-6
         s_, r, done, info = env.step(action)
 
         done_bool = False if step == env._max_episode_steps else done

@@ -173,9 +173,9 @@ def OptLayer_function(action, random_sample=False):
                 obj = (a1-neta1)**2 + (a2-neta2)**2
                 reacher_m.setObjective(obj, GRB.MINIMIZE)
 
-                reacher_m.addConstr(a1+a2 <= 0.1)
-                reacher_m.addConstr(-0.1 <= a1+a2)
-                reacher_m.addConstr((a1**2+a2**2) <= 0.02)
+                # reacher_m.addConstr(a1+a2 <= 0.1)
+                # reacher_m.addConstr(-0.1 <= a1+a2)
+                reacher_m.addConstr((a1**2+a2**2) <= 0.05)
 
                 reacher_m.optimize()
 
@@ -201,21 +201,13 @@ class OptLayer(torch.nn.Module):
         # Q_sqrt = cp.Parameter((D_in, D_in))
         q = cp.Parameter(D_in)  # input: atilde => w@q+b
 
-        # linear constraint
-        G = cp.Parameter((cons1_size, D_in))
-        h = cp.Parameter(cons1_size)
-
-        # Ax >= 0
-        A = cp.Parameter((cons2_size, D_in))
-        b = cp.Parameter(cons2_size)
-
         x = cp.Variable(D_out)  # output
         obj = cp.Minimize(0.5*cp.sum_squares(x) - q.T @ x)
-        cons = [A @ x >= b, G @ x <= h, cp.sum_squares(x) <= 0.02]
+        cons = [cp.sum_squares(x) <= 0.05]
 
         prob = cp.Problem(obj, cons)
         self.layer = CvxpyLayer(
-            prob, parameters=[q, A, b, G, h], variables=[x])
+            prob, parameters=[q], variables=[x])
 
     def forward(self, x):
         Gval = torch.tensor([[1, 1]], dtype=torch.float32,
