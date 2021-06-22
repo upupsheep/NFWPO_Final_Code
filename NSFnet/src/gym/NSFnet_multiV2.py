@@ -151,8 +151,7 @@ class Link():
             self.queue_delay_update_time = event_time
             self.queue_link, queue_delta_time, self.now_queue_in_link = self.update_packet_queue(self.queue_link, queue_delta_time, self.now_queue_in_link)
             return sum(self.queue_link)
-    def get_cur_latency(self, event_time,event_type):
-        return self.dl + self.get_cur_queue_delay(event_time, event_type)
+
     def packet_enters_link(self, event_time,event_type):
         if event_type==EVENT_TYPE_RETURN:
             self.get_cur_queue_delay(event_time,event_type)
@@ -172,40 +171,14 @@ class Link():
             return True  
     
     
-    def get_cur_queue_delay(self, event_time,event_type):
-        if event_type == EVENT_TYPE_RETURN:
-            return max(0.0, self.return_queue_delay - (event_time - self.return_queue_delay_update_time))            
-        else:
-            return max(0.0, self.queue_delay - (event_time - self.queue_delay_update_time))
 
     def get_cur_latency(self, event_time,event_type):
         if event_type==EVENT_TYPE_RETURN :
             return 0.001*self.dl + self.get_cur_queue_delay(event_time,event_type)
         else:
+        
             return self.dl + self.get_cur_queue_delay(event_time,event_type)
-    def packet_enters_link(self, event_time,event_type):
 
-        
-        
-        if event_type==EVENT_TYPE_RETURN:
-            self.return_queue_delay= self.get_cur_queue_delay(event_time,event_type)
-            self.return_queue_delay_update_time = event_time
-            extra_delay = 1/packet_return_size / self.bw
-            self.return_queue_delay += extra_delay
-            return True
-        else:
-            if (random.random() < self.lr):
-                return False
-            self.queue_delay = self.get_cur_queue_delay(event_time,event_type)
-            self.queue_delay_update_time = event_time
-            extra_delay = 1.0 / self.bw
-            #print(self.link_id,"Extra delay: %f, Current delay: %f, Max delay: %f" % (extra_delay, self.queue_delay, self.max_queue_delay))
-            if extra_delay + self.queue_delay > self.max_queue_delay:
-                #print("\tDrop!")
-                return False
-            self.queue_delay += extra_delay
-            #print("\tNew delay = %f" % self.queue_delay)
-            return True
     
     def state_change(self):
         if (random.random() < (1.0/3)):
@@ -496,46 +469,7 @@ class Network():
                         else:
                             push_new_event = False
                             p5 += 1/sender.p5
-                        """
-                        print(t)
-                        print(p)
-                        """
-                        """
-                        print(ran_tmp,"_",sender.p0," ",sender.p1," ",sender.p2," ",sender.p3," ",sender.p4)
-                        print(ran_tmp,":",t0," ",t1," ",t2," ",t3," ",t4)
-                        print(ran_tmpp," ",p0," ",p1," ",p2," ",p3," ",p4," ",p5)
-                        """
-                        
-                        """
-                        
-                        if ran_tmp==0 :                        
-                            pack=Packet(self.packet_counter,0,self.cur_time,0,[0,1,3,7],"test0")
-                            p0 += 1/sender.p0
-                        elif ran_tmp==1 :                        
-                            pack=Packet(self.packet_counter,1,self.cur_time,0.01,[0,1,4,8],"test1")
-                            p1 += 1/sender.p1
-                        elif ran_tmp==2 :
-                            pack=Packet(self.packet_counter,2,self.cur_time,0.02,[0,2,5,7],"test2")
-                            p2 += 1/sender.p2
-                        elif ran_tmp==3 :
-                            pack=Packet(self.packet_counter,3,self.cur_time,0.03,[0,2,6,8],"test3")
-                            p3 += 1/sender.p3
-                        else:
-                            push_new_event = False
-                            p4 += 1/sender.p4
-                            recv_total4 = recv_total4+1
-                        """
-                        """
-                        random_tmp=random.random()
-                        if (random_tmp < (sender.p0)):
-                            pack=Packet(self.packet_counter,0,self.cur_time,0,[0,1,2,5],"test0")
-                      
-                        elif (random_tmp < (sender.p1)):
-                            pack=Packet(self.packet_counter,1,self.cur_time,0.01,[0,1,4,7],"test1")
-                           # print("1 ",sender.p1)
-                        else:
-                            pack=Packet(self.packet_counter,2,self.cur_time,0.02,[0,3,6,7],"test2")
-                        """
+            
                         self.packet_counter+=1
                         pack_ = Packet(self.packet_counter,0,self.cur_time,0,[0,0,0,0],"send %d"% ran_tmp)
                         heapq.heappush(self.q, (self.cur_time +  sender.arrival_time[sender.now_packet], 1, noi, sender, EVENT_TYPE_SEND, 0, 0.0, False, acp_tmp, pack_)) 
@@ -623,11 +557,7 @@ class Network():
         reward_flow3 = 0
         drop_total_ = sum(drop_total)
 
-        """
-        print(throughput,' ',latency)
-        print(throughput1,' ',latency1)
-        print(throughput2,' ',latency2)
-        """
+        
         reward_flow1 = math.log(max(throughput, math.exp(-17.5))) - 1.5 * math.log(max(latency, math.exp(-5))) - 0.5 * math.log(max(drop_total[0], 1))
         reward_flow2 = math.log(max(throughput1, math.exp(-17.5))) - 1.5 * math.log(max(latency1, math.exp(-5))) - 0.5 * math.log(max(drop_total[1], 1))
         reward_flow3 = math.log(max(throughput2, math.exp(-17.5))) - 1.5 * math.log(max(latency2, math.exp(-5))) - 0.5 * math.log(max(drop_total[2], 1))
@@ -643,9 +573,6 @@ class Network():
             else:
                 reward = tmpreward[0]/(self.cur_time-tmp_time)
         elif REWARD_CONTROL == 4 :
-            #reward = recv_total - drop_total -10 * latency
-            #reward = recv_total - drop_total
-            
             reward = reward_flow1 + reward_flow2 + reward_flow3 
         
         # High thpt
@@ -695,6 +622,8 @@ class Sender():
         self.bytes_in_flight = 0
         self.min_latency = None
         self.rtt_samples = []
+        
+        
         self.sample_time = []
         self.net = None
         self.start=start
@@ -965,9 +894,7 @@ class SimulatedNetworkEnv(gym.Env):
         return sender_obs
 
     def step(self, actions):
-        #print("Actions: %s" % str(actions))
-        #print(actions)
-#        print(typeactions)
+
         if Sender0_mode == 0:
             action = actions
             self.senders[0].apply_rate_delta(action)
@@ -1011,23 +938,7 @@ class SimulatedNetworkEnv(gym.Env):
         for sender in self.senders:
             self.senders[sender.sender_ID].arrival_time = 1/(random.poisson(lam=sender.rate, size=10000)+1)
             self.senders[sender.sender_ID].now_packet = 0
-        #print()
-        #print(self.senders[0].rate)
-        #self.senders[0].rate = 300 
-        #self.senders[0].rate = MAX_RATE   
-        """
-        if(self.steps_taken % 100 ==0):
-            t = self.senders[0].rate
-            if random.randint(1,2) == 1:
-                self.senders[0].set_rate(t+100)
-            else :
-                self.senders[0].set_rate(t-100)
-        """
-        """
-        for i in range(4):
-            if self.steps_taken == send_test_line[i]:
-              self.senders[0].set_rate(send_test_num[i])
-        """
+
         #print("Running for %fs" % self.run_dur)
         
         reward, recv_total0, recv_total1, recv_total2, recv_total3, recv_total4, drop_total = self.net.run_for_dur(self.run_dur)
@@ -1037,17 +948,16 @@ class SimulatedNetworkEnv(gym.Env):
             sender.record_run()
         self.steps_taken += 1
         sender_obs = self._get_all_sender_obs()
-        #print(sender_obs)
+
         reward1 = drop_total
         sender_mi = self.senders[0].get_run_data()
-        #sender_mi1 = self.senders[1].get_run_data()
+
         event = {}
         event["Name"] = "Step"
         event["Time"] = self.steps_taken
         event["Reward"] = reward
         event["Reward1"] = reward1
-        #event["Target Rate"] = sender_mi.target_rate
-        #print( sender_mi.get("send rate"))
+
         event["Send Rate"] = sender_mi.get("send rate")
         event["Throughput"] = sender_mi.get("recv rate")
         event["Latency"] = sender_mi.get("avg latency")
@@ -1168,11 +1078,7 @@ class SimulatedNetworkEnv(gym.Env):
             #self.net = Network(self.senders, self.links,self.packet_temp)
         
         self.episodes_run += 1
-        """
-        if self.episodes_run > 0 and self.episodes_run % 100 == 0:
-            self.dump_events_to_file("1017ver7aoidur05_log_run_%d.json" % self.episodes_run,0)
-        """
-        #print(self.event_record)
+
         #self.dump_events_to_file("prob_best.json" ,0)
         self.event_record = {"Events":[]}
         self.net.run_for_dur(self.run_dur)
@@ -1181,10 +1087,7 @@ class SimulatedNetworkEnv(gym.Env):
         self.reward_ewma += 0.01 * self.reward_sum
         self.reward_ewma1 *= 0.99
         self.reward_ewma1 += 0.01 * self.reward_sum1
-        #print("1226ver1dur05_Reward: %0.2f, Ewma Reward: %0.2f" % (self.reward_sum, self.reward_ewma))
-        #print(self.links[4].queue_delay/self.links[4].max_queue_delay)
-        #print(self.senders[0].rate)
-        #print("527ver6dur05 _Reward1: %0.2f, Ewma Reward1: %0.2f" % (self.reward_sum1, self.reward_ewma1))
+
         self.reward_sum = 0.0
         self.reward_sum1 = 0.0
         self.update_reward_array(self.reward_ewma)
