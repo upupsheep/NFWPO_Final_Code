@@ -328,7 +328,7 @@ for ep in range(500):
         #    exploration=exploration*0.9999
         #use gaussian exploration by TD3 (0,0.1) to each eaction
         
-        if ddpg.pointer<1000:
+        if ddpg.pointer<10000:
             action=env.action_space.sample()
             store_network_output_action.append(action)
             store_before_action.append(action)
@@ -358,7 +358,7 @@ for ep in range(500):
         s_,r,done,info=env.step(action)
         done_bool = False if step==1000 else done    
         ddpg.store_transition(s,action,r,s_,done_bool)
-        if ddpg.pointer>1000:
+        if ddpg.pointer>10000:
             if ddpg.pointer%50==0:
                 ddpg.learn()
                 ddpg.fw_update()
