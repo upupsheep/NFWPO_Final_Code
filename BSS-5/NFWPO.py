@@ -182,7 +182,7 @@ class DDPG(object):
             net2 = tf.compat.v1.layers.dense(
                 net, 300, activation=tf.nn.leaky_relu, name='l2', trainable=trainable)
             a = tf.compat.v1.layers.dense(
-                net2, self.a_dim, activation=tf.nn.tanh, name='a', trainable=trainable)
+                net2, self.a_dim, activation=tf.nn.leaky_relu, name='a', trainable=trainable)
             return a
 
     def _build_c(self, s, a, scope, trainable):
