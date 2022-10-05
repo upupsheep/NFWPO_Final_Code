@@ -117,7 +117,8 @@ class DDPG(object):
 
     def critic_learn(self):
         # soft target replacement
-        indices = np.random.choice(MEMORY_CAPACITY, size=BATCH_SIZE)
+        buffer_size = min(ddpg.pointer+1, MEMORY_CAPACITY)
+        indices = np.random.choice(buffer_size, size=BATCH_SIZE)
         bt = self.memory[indices, :]
         bs = bt[:, :self.s_dim]
         ba = bt[:, self.s_dim: self.s_dim + self.a_dim]
