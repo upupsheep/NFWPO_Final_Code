@@ -169,7 +169,7 @@ class DDPG(object):
             net2 = tf.compat.v1.layers.dense(net,300, activation=tf.nn.leaky_relu, name='l2', trainable=trainable)
             #a = tf.compat.v1.layers.dense(net2, self.a_dim, activation=self.new_relu10000, name='a', trainable=trainable)
             a = tf.compat.v1.layers.dense(net2, self.a_dim, activation=tf.nn.tanh, name='a', trainable=trainable)
-            #a = tf.multiply(tf.add(a,1), 50, name='scaled_a')
+            a = tf.multiply(tf.add(a,1), 50, name='scaled_a')
             #return  tf.multiply(a, self.a_bound, name='scaled_a')
             return a
             #return tf.multiply(a, self.a_bound, name='scaled_a')
@@ -338,7 +338,7 @@ for ep in range(500):
             #action=(ddpg.choose_action(s)+1)/2 *100
             #action=action+np.random.normal(0,3,a_dim)
             a_temp = ddpg.choose_action(s)
-            action=(a_temp+np.random.normal(0,3,a_dim)).clip(min_action,max_action)
+            action=(a_temp+np.random.normal(0,var,a_dim)).clip(min_action,max_action)
             store_network_output_action.append(a_temp)
             if ddpg.pointer %250==0 :
                 all_action.append(action)
@@ -383,7 +383,7 @@ a=[]
 for i in range(500):
     a.append(1000*i)
 plt.plot(a,ewma)
-plt.title("ewma reward, lr=0.05 fix, final ewma={}".format(ewma[499])) 
+plt.title("ewma reward, final ewma={}".format(ewma[499])) 
 #mask = np.isin(Net_action[:,2], -1)
 #violate_index=np.where(mask)    
 np.save("Network_{}_DDPGFW_NSFnet_multi_new_Reward".format(arg_seed),ewma)
