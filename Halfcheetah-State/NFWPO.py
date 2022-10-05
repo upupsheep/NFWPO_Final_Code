@@ -191,7 +191,8 @@ class DDPG(object):
 
     def fw_update(self):
         lr = 0.01
-        indices = np.random.choice(MEMORY_CAPACITY, size=BATCH_SIZE)
+        buffer_size = min(ddpg.pointer+1, MEMORY_CAPACITY)
+        indices = np.random.choice(buffer_size, size=BATCH_SIZE)
         bt = self.memory[indices, :]
         bs = bt[:, :self.s_dim]
         ba = self.sess.run(self.a, {self.S: bs})
