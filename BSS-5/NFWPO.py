@@ -354,7 +354,7 @@ for ep in range(1000000):
         'ewma_reward': ewma_r
     })
     ewma.append(ewma_r)
-    if(ddpg.pointer >= 500000):
+    if(ddpg.pointer >= 1000000):
         print("done training")
         break
 a = []
